@@ -53,50 +53,47 @@ Tambah Booking
     </div>
 </div>
 <script>
-    const kursiLayout = {
-        1: [1, 3, 3, 3, 4],
-        2: [1, 3, 3]
-    };
-
-    document.getElementById('sarana_id').addEventListener('change', function () {
+    document.getElementById('sarana_id').addEventListener('change', function() {
         const sarana = this.value;
-        const layout = kursiLayout[sarana] || [];
         const kursiContainer = document.getElementById('kursi-layout');
         kursiContainer.innerHTML = '';
+
+        if (!sarana) return;
 
         fetch(`<?= base_url('api/kursi/') ?>${sarana}`)
             .then(response => response.json())
             .then(data => {
                 let seatNumber = 1;
-                layout.forEach(rowSize => {
-                    let rowDiv = document.createElement('div');
-                    rowDiv.classList.add('d-flex', 'justify-content-center', 'mb-2');
+                let rowDiv = document.createElement('div');
+                rowDiv.classList.add('d-flex', 'flex-wrap', 'justify-content-center');
 
-                    for (let i = 0; i < rowSize; i++) {
-                        let seat = document.createElement('button');
-                        seat.classList.add('btn', 'm-1');
-                        seat.textContent = seatNumber;
-                        seat.dataset.kursiId = seatNumber;
+                data.forEach(kursi => {
+                    let seat = document.createElement('button');
+                    seat.classList.add('btn', 'm-1');
+                    seat.textContent = kursi.nomor_kursi;
+                    seat.dataset.kursiId = kursi.id;
 
-                        let isBooked = data.some(kursi => kursi.nomor_kursi == seatNumber && kursi.status_kursi == 'terisi');
-                        if (isBooked) {
-                            seat.classList.add('btn-danger');
-                            seat.disabled = true;
-                        } else {
-                            seat.classList.add('btn-outline-primary');
-                            seat.onclick = function () {
-                                document.querySelectorAll('#kursi-layout button').forEach(btn => btn.classList.remove('btn-success'));
-                                this.classList.add('btn-success');
-                                document.getElementById('kursi_id').value = this.dataset.kursiId;
-                            };
-                        }
-                        rowDiv.appendChild(seat);
-                        seatNumber++;
+                    if (kursi.status_kursi === 'terisi') {
+                        seat.classList.add('btn-danger');
+                        seat.disabled = true;
+                    } else {
+                        seat.classList.add('btn-outline-primary');
+                        seat.onclick = function() {
+                            document.querySelectorAll('#kursi-layout button').forEach(btn =>
+                                btn.classList.remove('btn-success'));
+                            this.classList.add('btn-success');
+                            document.getElementById('kursi_id').value = this.dataset.kursiId;
+                        };
                     }
-                    kursiContainer.appendChild(rowDiv);
+                    rowDiv.appendChild(seat);
+                    seatNumber++;
                 });
-            });
+
+                kursiContainer.appendChild(rowDiv);
+            })
+            .catch(error => console.error('Error fetching kursi:', error));
     });
 </script>
+
 
 <?= $this->endSection() ?>
