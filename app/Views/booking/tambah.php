@@ -6,7 +6,6 @@ Tambah Booking
 
 <?= $this->section('content') ?>
 
-
 <div class="card-box mb-30">
     <div class="pd-20">
         <h4 class="text-blue h4">Form Tambah Booking</h4>
@@ -21,7 +20,7 @@ Tambah Booking
                 <select name="sarana_id" id="sarana_id" class="form-control" required>
                     <option value="" disabled selected>Pilih Sarana</option>
                     <?php foreach ($sarana as $item): ?>
-                        <option value="<?= $item['id'] ?>"><?= $item['nama'] ?></option>
+                    <option value="<?= $item['id'] ?>"><?= $item['nama'] ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
@@ -53,47 +52,67 @@ Tambah Booking
     </div>
 </div>
 <script>
-    document.getElementById('sarana_id').addEventListener('change', function() {
-        const sarana = this.value;
-        const kursiContainer = document.getElementById('kursi-layout');
-        kursiContainer.innerHTML = '';
+document.getElementById('sarana_id').addEventListener('change', function() {
+    const sarana = this.value;
+    const kursiContainer = document.getElementById('kursi-layout');
+    kursiContainer.innerHTML = '';
 
-        if (!sarana) return;
+    if (!sarana) return;
 
-        fetch(`<?= base_url('api/kursi/') ?>${sarana}`)
-            .then(response => response.json())
-            .then(data => {
-                let seatNumber = 1;
+    fetch(`<?= base_url('api/kursi/') ?>${sarana}`)
+        .then(response => response.json())
+        .then(data => {
+            let layout = [];
+            if (sarana == 1) {
+                layout = [
+                    [1],
+                    [4, 3, 2],
+                    [7, 6, 5],
+                    [10, 9, 8],
+                    [14, 13, 12, 11]
+                ];
+            } else if (sarana == 2) {
+                layout = [
+                    [1],
+                    [4, 3, 2],
+                    [6, 5]
+                ];
+            }
+
+            layout.forEach(row => {
                 let rowDiv = document.createElement('div');
-                rowDiv.classList.add('d-flex', 'flex-wrap', 'justify-content-center');
+                rowDiv.classList.add('d-flex', 'justify-content-center', 'mb-2');
 
-                data.forEach(kursi => {
-                    let seat = document.createElement('button');
-                    seat.classList.add('btn', 'm-1');
-                    seat.textContent = kursi.nomor_kursi;
-                    seat.dataset.kursiId = kursi.id;
+                row.forEach(seatNumber => {
+                    let kursi = data.find(k => parseInt(k.nomor_kursi) === seatNumber);
+                    if (kursi) {
+                        let seat = document.createElement('button');
+                        seat.classList.add('btn', 'm-1');
+                        seat.textContent = kursi.nomor_kursi;
+                        seat.dataset.kursiId = kursi.id;
 
-                    if (kursi.status_kursi === 'terisi') {
-                        seat.classList.add('btn-danger');
-                        seat.disabled = true;
-                    } else {
-                        seat.classList.add('btn-outline-primary');
-                        seat.onclick = function() {
-                            document.querySelectorAll('#kursi-layout button').forEach(btn =>
-                                btn.classList.remove('btn-success'));
-                            this.classList.add('btn-success');
-                            document.getElementById('kursi_id').value = this.dataset.kursiId;
-                        };
+                        if (kursi.status_kursi === 'terisi') {
+                            seat.classList.add('btn-danger');
+                            seat.disabled = true;
+                        } else {
+                            seat.classList.add('btn-outline-primary');
+                            seat.onclick = function() {
+                                document.querySelectorAll('#kursi-layout button')
+                                    .forEach(btn => btn.classList.remove(
+                                    'btn-success'));
+                                this.classList.add('btn-success');
+                                document.getElementById('kursi_id').value = this.dataset
+                                    .kursiId;
+                            };
+                        }
+                        rowDiv.appendChild(seat);
                     }
-                    rowDiv.appendChild(seat);
-                    seatNumber++;
                 });
-
                 kursiContainer.appendChild(rowDiv);
-            })
-            .catch(error => console.error('Error fetching kursi:', error));
-    });
+            });
+        })
+        .catch(error => console.error('Error fetching kursi:', error));
+});
 </script>
-
 
 <?= $this->endSection() ?>
